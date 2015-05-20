@@ -1,46 +1,42 @@
 ﻿/**
- * autoNumeric.js
- * @author: Bob Knothe
- * @author: Sokolov Yura
- * @version: 1.9.36 - 2015-05-10 GMT 8:00 PM / 20:00
- *
- * Created by Robert J. Knothe on 2010-10-25. Please report any bugs to https://github.com/BobKnothe/autoNumeric
- * Created by Sokolov Yura on 2010-11-07
- *
- * Copyright (c) 2011 Robert J. Knothe http://www.decorplanit.com/plugin/
- *
- * The MIT License (http://www.opensource.org/licenses/mit-license.php)
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without
- * restriction, including without limitation the rights to use,
- * copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following
- * conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
- */
+* autoNumeric.js
+* @author: Bob Knothe
+* @author: Sokolov Yura
+* @version: 1.9.30 - 2015-01-13 GMT 3:30 AM
+*
+* Created by Robert J. Knothe on 2010-10-25. Please report any bugs to https://github.com/BobKnothe/autoNumeric
+* Created by Sokolov Yura on 2010-11-07
+*
+* Copyright (c) 2011 Robert J. Knothe http://www.decorplanit.com/plugin/
+*
+* The MIT License (http://www.opensource.org/licenses/mit-license.php)
+*
+* Permission is hereby granted, free of charge, to any person
+* obtaining a copy of this software and associated documentation
+* files (the "Software"), to deal in the Software without
+* restriction, including without limitation the rights to use,
+* copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the
+* Software is furnished to do so, subject to the following
+* conditions:
+*
+* The above copyright notice and this permission notice shall be
+* included in all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+* NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+* HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+* OTHER DEALINGS IN THE SOFTWARE.
+*/
 (function ($) {
     "use strict";
     /*jslint browser: true*/
     /*global jQuery: false*/
-    /*Cross browser routine for getting selected range/cursor position
-     */
-
-   /**
-     * Cross browser routine for getting selected range/cursor position
+    /* Cross browser routine for getting selected range/cursor position
      */
     function getElementSelection(that) {
         var position = {};
@@ -58,7 +54,6 @@
         }
         return position;
     }
-
     /**
      * Cross browser routine for setting selected range/cursor position
      */
@@ -75,7 +70,6 @@
             that.selectionEnd = end;
         }
     }
-
     /**
      * run callbacks in parameters if any
      * any parameter could be a callback:
@@ -99,22 +93,18 @@
             }
         });
     }
-
-    /**
-     * Converts the vMin, vMax & mDec string to numeric value
-     */
     function convertKeyToNumber(settings, key) {
         if (typeof (settings[key]) === 'string') {
             settings[key] *= 1;
         }
     }
-
     /**
      * Preparing user defined options for further usage
      * merge them with defaults appropriately
      */
     function autoCode($this, settings) {
         runCallbacks($this, settings);
+        settings.oEvent = null;
         settings.tagList = ['b', 'caption', 'cite', 'code', 'dd', 'del', 'div', 'dfn', 'dt', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ins', 'kdb', 'label', 'li', 'output', 'p', 'q', 's', 'sample', 'span', 'strong', 'td', 'th', 'u', 'var'];
         var vmax = settings.vMax.toString().split('.'),
             vmin = (!settings.vMin && settings.vMin !== 0) ? [] : settings.vMin.toString().split('.');
@@ -155,9 +145,8 @@
         settings.numRegAutoStrip = new RegExp(aNegReg + '(?:\\' + settings.aDec + '?(\\d+\\' + settings.aDec + '\\d+)|(\\d*(?:\\' + settings.aDec + '\\d*)?))');
         return settings;
     }
-
     /**
-     * strips all unwanted characters and leave only a number alert
+     * strip all unwanted characters and leave only a number alert
      */
     function autoStrip(s, settings, strip_zero) {
         if (settings.aSign) { /** remove currency sign */
@@ -193,25 +182,54 @@
         }
         return s;
     }
-
     /**
      * places or removes brackets on negative values
-     * works only when with pSign: 'p'
      */
-    function negativeBracket(s, settings) {
-        if (settings.pSign === 'p') {
-            var brackets = settings.nBracket.split(',');
-            if (!settings.hasFocus && !settings.removeBrackets) {
-                s = s.replace(settings.aNeg, '');
-                s = brackets[0] + s + brackets[1];
-            } else if ((settings.hasFocus && s.charAt(0) === brackets[0]) || (settings.removeBrackets && s.charAt(0) === brackets[0])) {
-                s = s.replace(brackets[0], settings.aNeg);
-                s = s.replace(brackets[1], '');
+    function negativeBracket(s, nBracket, oEvent) { /** oEvent = settings.oEvent */
+        nBracket = nBracket.split(',');
+        if (oEvent === 'set' || oEvent === 'focusout') {
+            s = s.replace('-', '');
+            s = nBracket[0] + s + nBracket[1];
+        } else if ((oEvent === 'get' || oEvent === 'focusin' || oEvent === 'pageLoad') && s.charAt(0) === nBracket[0]) {
+            s = s.replace(nBracket[0], '-');
+            s = s.replace(nBracket[1], '');
+        }
+        return s;
+    }
+    /**
+     * truncate decimal part of a number
+     */
+    function truncateDecimal(s, aDec, mDec) {
+        if (aDec && mDec) {
+            var parts = s.split(aDec);
+            /** truncate decimal part to satisfying length
+             * cause we would round it anyway */
+            if (parts[1] && parts[1].length > mDec) {
+                if (mDec > 0) {
+                    parts[1] = parts[1].substring(0, mDec);
+                    s = parts.join(aDec);
+                } else {
+                    s = parts[0];
+                }
             }
         }
         return s;
     }
-
+    /**
+     * prepare number string to be converted to real number
+     */
+    function fixNumber(s, aDec, aNeg) {
+        if (aDec && aDec !== '.') {
+            s = s.replace(aDec, '.');
+        }
+        if (aNeg && aNeg !== '-') {
+            s = s.replace(aNeg, '-');
+        }
+        if (!s.match(/\d/)) {
+            s += '0';
+        }
+        return s;
+    }
     /**
      * function to handle numbers less than 0 that are stored in Exponential notation ex: .0000001 stored as 1e-7
      */
@@ -243,23 +261,6 @@
         }
         return (settings.lZero === 'keep') ? value : value.replace(/^0*(\d)/, '$1');
     }
-
-    /**
-     * prepare number string to be converted to real number
-     */
-    function fixNumber(s, aDec, aNeg) {
-        if (aDec && aDec !== '.') {
-            s = s.replace(aDec, '.');
-        }
-        if (aNeg && aNeg !== '-') {
-            s = s.replace(aNeg, '-');
-        }
-        if (!s.match(/\d/)) {
-            s += '0';
-        }
-        return s;
-    }
-
     /**
      * prepare real number to be converted to our format
      */
@@ -272,7 +273,24 @@
         }
         return s;
     }
-
+    /**
+     * checking that number satisfy format conditions
+     * and lays between settings.vMin and settings.vMax
+     * and the string length does not exceed the digits in settings.vMin and settings.vMax
+     */
+    function autoCheck($this, s, settings) {
+        s = autoStrip(s, settings);
+        s = truncateDecimal(s, settings.aDec, settings.mDec);
+        s = fixNumber(s, settings.aDec, settings.aNeg);
+        var value = +s;
+        if (settings.oEvent === 'set' && (value < settings.vMin || value > settings.vMax)) {
+            if (settings.overflowHandler)
+                return eval(settings.overflowHandler + '($this, value, settings);');
+            else
+                $.error("The value (" + value + ") from the 'set' method falls outside of the vMin / vMax range");
+        }
+        return value >= settings.vMin && value <= settings.vMax;
+    }
     /**
      * private function to check for empty value
      */
@@ -288,7 +306,6 @@
         }
         return null;
     }
-
     /**
      * private function that formats our number
      */
@@ -310,17 +327,17 @@
         var ivSplit = iv.split(settings.aDec);
         if (settings.altDec && ivSplit.length === 1) {
             ivSplit = iv.split(settings.altDec);
-        } /** assigns the whole number to the a variable (s) */
+        } /** assigns the whole number to the a varibale (s) */
         var s = ivSplit[0];
         if (settings.aSep) {
-            while (digitalGroup.test(s)) { /** re-inserts the thousand separator via a regular expression */
+            while (digitalGroup.test(s)) { /** re-inserts the thousand sepparator via a regualer expression */
                 s = s.replace(digitalGroup, '$1' + settings.aSep + '$2');
             }
         }
         if (settings.mDec !== 0 && ivSplit.length > 1) {
             if (ivSplit[1].length > settings.mDec) {
                 ivSplit[1] = ivSplit[1].substring(0, settings.mDec);
-            } /** joins the whole number with the decimal value */
+            } /** joins the whole number with the deciaml value */
             iv = s + settings.aDec + ivSplit[1];
         } else { /** if whole numbers only */
             iv = s;
@@ -333,12 +350,11 @@
                 iv = settings.aNeg + iv;
             }
         }
-        if (testNeg < 0 && settings.nBracket !== null) { /** removes the negative sign and places brackets */
-            iv = negativeBracket(iv, settings);
+        if (settings.oEvent === 'set' && testNeg < 0 && settings.nBracket !== null) { /** removes the negative sign and places brackets */
+            iv = negativeBracket(iv, settings.nBracket, settings.oEvent);
         }
         return iv;
     }
-
     /**
      * round number after setting by pasting or $().autoNumericSet()
      * private function for round the number
@@ -376,10 +392,8 @@
         if ((+iv > 0 && settings.lZero !== 'keep') || (iv.length > 0 && settings.lZero === 'allow')) { /** trims leading zero's if needed */
             iv = iv.replace(/^0*(\d)/, '$1');
         }
-        var dPos = iv.lastIndexOf('.'),
-            /** virtual decimal position */
-            vdPos = (dPos === -1) ? iv.length - 1 : dPos,
-            /** checks decimal places to determine if rounding is required */
+        var dPos = iv.lastIndexOf('.'), /** virtual decimal position */
+            vdPos = (dPos === -1) ? iv.length - 1 : dPos, /** checks decimal places to determine if rounding is required */
             cDec = (iv.length - 1) - vdPos; /** check if no rounding is required */
         if (cDec <= settings.mDec) {
             ivRounded = iv; /** check if we need to pad with zeros */
@@ -415,21 +429,19 @@
         if (odd !== 1) {
             odd = (odd === 0 && (iv.substring(rLength + 2, iv.length) > 0)) ? 1 : 0;
         }
-        /*jslint white: true*/
-        if ((tRound > 4 && settings.mRound === 'S') || /**                      Round half up symmetric */
-            (tRound > 4 && settings.mRound === 'A' && nSign === '') || /**      Round half up asymmetric positive values */
-            (tRound > 5 && settings.mRound === 'A' && nSign === '-') || /**     Round half up asymmetric negative values */
-            (tRound > 5 && settings.mRound === 's') || /**                      Round half down symmetric */
-            (tRound > 5 && settings.mRound === 'a' && nSign === '') || /**      Round half down asymmetric positive values */
-            (tRound > 4 && settings.mRound === 'a' && nSign === '-') || /**     Round half down asymmetric negative values */
-            (tRound > 5 && settings.mRound === 'B') || /**                      Round half even "Banker's Rounding" */
-            (tRound === 5 && settings.mRound === 'B' && odd === 1) || /**       Round half even "Banker's Rounding" */
-            (tRound > 0 && settings.mRound === 'C' && nSign === '') || /**      Round to ceiling toward positive infinite */
-            (tRound > 0 && settings.mRound === 'F' && nSign === '-') || /**     Round to floor toward negative infinite */
-            (tRound > 0 && settings.mRound === 'U') || /**                      round up away from zero */
-            (settings.mRound === 'CHF')) { /**                                  Round Swiss FRanc */
-            /*jslint white: false*/
-            for (i = (ivArray.length - 1); i >= 0; i -= 1) { /** Round up the last digit if required, and continue until no more 9's are found */
+        if ((tRound > 4 && settings.mRound === 'S') || /** Round half up symmetric */
+                (tRound > 4 && settings.mRound === 'A' && nSign === '') || /** Round half up asymmetric positive values */
+                (tRound > 5 && settings.mRound === 'A' && nSign === '-') || /** Round half up asymmetric negative values */
+                (tRound > 5 && settings.mRound === 's') || /** Round half down symmetric */
+                (tRound > 5 && settings.mRound === 'a' && nSign === '') || /** Round half down asymmetric positive values */
+                (tRound > 4 && settings.mRound === 'a' && nSign === '-') || /** Round half down asymmetric negative values */
+                (tRound > 5 && settings.mRound === 'B') || /** Round half even "Banker's Rounding" */
+                (tRound === 5 && settings.mRound === 'B' && odd === 1) || /** Round half even "Banker's Rounding" */
+                (tRound > 0 && settings.mRound === 'C' && nSign === '') || /** Round to ceiling toward positive infinite */
+                (tRound > 0 && settings.mRound === 'F' && nSign === '-') || /** Round to floor toward negative infinite */
+                (tRound > 0 && settings.mRound === 'U') ||
+                (settings.mRound === 'CHF')) { /** round up away from zero */
+            for (i = (ivArray.length - 1) ; i >= 0; i -= 1) { /** Round up the last digit if required, and continue until no more 9's are found */
                 if (ivArray[i] !== '.') {
                     if (settings.mRound === 'CHF' && ivArray[i] <= 2 && onePass) {
                         ivArray[i] = 0;
@@ -460,43 +472,6 @@
         ivRounded = truncateZeros(ivArray.join('')); /** return rounded value */
         return (+ivRounded === 0) ? ivRounded : nSign + ivRounded;
     }
-
-    /**
-     * truncate decimal part of a number
-     */
-    function truncateDecimal(s, settings, paste) {
-        var aDec = settings.aDec,
-            mDec = settings.mDec;
-        s = (paste === 'paste') ? autoRound(s, settings) : s;
-        if (aDec && mDec) {
-            var parts = s.split(aDec);
-            /** truncate decimal part to satisfying length
-             * cause we would round it anyway */
-            if (parts[1] && parts[1].length > mDec) {
-                if (mDec > 0) {
-                    parts[1] = parts[1].substring(0, mDec);
-                    s = parts.join(aDec);
-                } else {
-                    s = parts[0];
-                }
-            }
-        }
-        return s;
-    }
-
-    /**
-     * checking that number satisfy format conditions
-     * and lays between settings.vMin and settings.vMax
-     * and the string length does not exceed the digits in settings.vMin and settings.vMax
-     */
-    function autoCheck(s, settings) {
-        s = autoStrip(s, settings);
-        s = truncateDecimal(s, settings);
-        s = fixNumber(s, settings.aDec, settings.aNeg);
-        var value = +s;
-        return value >= settings.vMin && value <= settings.vMax;
-    }
-
     /**
      * Holder object for field properties
      */
@@ -550,7 +525,6 @@
             parts[1] = autoStrip(parts[1], this.settingsClone);
             return parts;
         },
-
         /**
          * strip parts from excess characters and leading zeroes
          */
@@ -578,17 +552,16 @@
             }
             return [left, right];
         },
-
         /**
          * set part of number to value keeping position of cursor
          */
-        setValueParts: function (left, right, paste) {
+        setValueParts: function (left, right, $this) {
             var settingsClone = this.settingsClone,
                 parts = this.normalizeParts(left, right),
                 new_value = parts.join(''),
                 position = parts[0].length;
-            if (autoCheck(new_value, settingsClone)) {
-                new_value = truncateDecimal(new_value, settingsClone, paste);
+            if (autoCheck($this, new_value, settingsClone)) {
+                new_value = truncateDecimal(new_value, settingsClone.aDec, settingsClone.mDec);
                 if (position > new_value.length) {
                     position = new_value.length;
                 }
@@ -598,7 +571,6 @@
             }
             return false;
         },
-
         /**
          * helper function for expandSelectionOnSign
          * returns sign position of a formatted value
@@ -618,7 +590,6 @@
             }
             return [1000, -1];
         },
-
         /**
          * expands selection to cover whole sign
          * prevents partial deletion/copying/overwriting of a sign
@@ -638,24 +609,21 @@
                 }
             }
         },
-
         /**
          * try to strip pasted value to digits
          */
         checkPaste: function () {
             if (this.valuePartsBeforePaste !== undefined) {
                 var parts = this.getBeforeAfter(),
-
                     oldParts = this.valuePartsBeforePaste;
                 delete this.valuePartsBeforePaste; /** try to strip pasted value first */
                 parts[0] = parts[0].substr(0, oldParts[0].length) + autoStrip(parts[0].substr(oldParts[0].length), this.settingsClone);
-                if (!this.setValueParts(parts[0], parts[1], 'paste')) {
+                if (!this.setValueParts(parts[0], parts[1])) {
                     this.value = oldParts.join('');
                     this.setPosition(oldParts[0].length, false);
                 }
             }
         },
-
         /**
          * process pasting, cursor moving and skipping of not interesting keys
          * if returns true, further processing is not performed
@@ -672,9 +640,8 @@
             }
             /** codes are taken from http://www.cambiaresearch.com/c4/702b8cd1-e5b0-42e6-83ac-25f0306e3e25/Javascript-Char-Codes-Key-Codes.aspx
              * skip Fx keys, windows keys, other special keys
-             * Thanks Ney Estrabelli for the FF for Mac meta key support "keycode 224"
              */
-            if ((kdCode >= 112 && kdCode <= 123) || (kdCode >= 91 && kdCode <= 93) || (kdCode >= 9 && kdCode <= 31) || (kdCode < 8 && (which === 0 || which === kdCode)) || kdCode === 144 || kdCode === 145 || kdCode === 45 || kdCode === 224) {
+            if ((kdCode >= 112 && kdCode <= 123) || (kdCode >= 91 && kdCode <= 93) || (kdCode >= 9 && kdCode <= 31) || (kdCode < 8 && (which === 0 || which === kdCode)) || kdCode === 144 || kdCode === 145 || kdCode === 45) {
                 return true;
             }
             if ((ctrlKey || cmdKey) && kdCode === 65) { /** if select all (a=65)*/
@@ -716,7 +683,6 @@
             }
             return false;
         },
-
         /**
          * process deletion of characters
          * returns true if processing performed
@@ -741,7 +707,6 @@
             }
             return false;
         },
-
         /**
          * process insertion of characters
          * returns true if processing performed
@@ -804,7 +769,6 @@
             } /** prevent any other character */
             return true;
         },
-
         /**
          * formatting of just processed value with keeping of cursor position
          */
@@ -858,10 +822,7 @@
             this.formatted = true;
         }
     };
-
-    /**
-    * thanks to Anthony & Evan C
-    */
+    /** thanks to Anthony & Evan C */
     function autoGet(obj) {
         if (typeof obj === 'string') {
             obj = obj.replace(/\[/g, "\\[").replace(/\]/g, "\\]");
@@ -872,10 +833,6 @@
         return $(obj);
     }
 
-    /**
-    * function to attach data to the element
-    * and imitate the holder
-    */
     function getHolder($that, settings, update) {
         var data = $that.data('autoNumeric');
         if (!data) {
@@ -889,49 +846,30 @@
         }
         return holder;
     }
-
     var methods = {
-
-        /**
-         * Method to initiate autoNumeric and attached the settings (default and options passed as a parameter
-         * $(someSelector).autoNumeric('init'); // initiate autoNumeric with defaults
-         * $(someSelector).autoNumeric('init', {option}); // initiate autoNumeric with options
-         * $(someSelector).autoNumeric(); // initiate autoNumeric with defaults
-         * $(someSelector).autoNumeric({option}); // initiate autoNumeric with options
-         * options passes as a parameter example '{aSep: '.', aDec: ',', aSign: '€ '}
-         */
         init: function (options) {
             return this.each(function () {
                 var $this = $(this),
                     settings = $this.data('autoNumeric'), /** attempt to grab 'autoNumeric' settings, if they don't exist returns "undefined". */
-                    tagData = $this.data(), /** attempt to grab HTML5 data, if they don't exist we'll get "undefined".*/
-                    $input = $this.is('input[type=text], input[type=hidden], input[type=tel], input:not([type])');
+                    tagData = $this.data(); /** attempt to grab HTML5 data, if they don't exist we'll get "undefined".*/
                 if (typeof settings !== 'object') { /** If we couldn't grab settings, create them from defaults and passed options. */
-                    settings = $.extend({}, $.fn.autoNumeric.defaults, tagData, options, {
-                        aNum: '0123456789',
-                        hasFocus: false,
-                        removeBrackets: false,
-                        runOnce: false,
-                        tagList: ['b', 'caption', 'cite', 'code', 'dd', 'del', 'div', 'dfn', 'dt', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ins', 'kdb', 'label', 'li', 'output', 'p', 'q', 's', 'sample', 'span', 'strong', 'td', 'th', 'u', 'var']
-                    }); /** Merge defaults, tagData and options */
+                    settings = $.extend({}, $.fn.autoNumeric.defaults, tagData, options); /** Merge defaults, tagData and options */
                     if (settings.aDec === settings.aSep) {
                         $.error("autoNumeric will not function properly when the decimal character aDec: '" + settings.aDec + "' and thousand separator aSep: '" + settings.aSep + "' are the same character");
+                        return this;
                     }
                     $this.data('autoNumeric', settings); /** Save our new settings */
                 } else {
                     return this;
                 }
+                settings.runOnce = false;
                 var holder = getHolder($this, settings);
-                if (!$input && $this.prop('tagName').toLowerCase() === 'input') { /** checks for non-supported input types */
-                    $.error('The input type "' + $this.prop('type') + '" is not supported by autoNumeric()');
-
-                }
                 if ($.inArray($this.prop('tagName').toLowerCase(), settings.tagList) === -1 && $this.prop('tagName').toLowerCase() !== 'input') {
                     $.error("The <" + $this.prop('tagName').toLowerCase() + "> is not supported by autoNumeric()");
-
+                    return this;
                 }
-                if (settings.runOnce === false && settings.aForm) { /** routine to format default value on page load */
-                    if ($input) {
+                if (settings.runOnce === false && settings.aForm) {/** routine to format default value on page load */
+                    if ($this.is('input[type=text], input[type=hidden], input[type=tel], input:not([type])')) {
                         var setValue = true;
                         if ($this[0].value === '' && settings.wEmpty === 'empty') {
                             $this[0].value = '';
@@ -955,6 +893,7 @@
                         holder = getHolder($this);
                         if (holder.settings.aDec === holder.settings.aSep) {
                             $.error("autoNumeric will not function properly when the decimal character aDec: '" + holder.settings.aDec + "' and thousand separator aSep: '" + holder.settings.aSep + "' are the same character");
+                            return this;
                         }
                         if (holder.that.readOnly) {
                             holder.processed = true;
@@ -966,6 +905,7 @@
                             holder.inVal = $this.val();
                         }*/
                         holder.init(e);
+                        holder.settings.oEvent = 'keydown';
                         if (holder.skipAllways(e)) {
                             holder.processed = true;
                             return true;
@@ -980,9 +920,10 @@
                         return true;
                     });
                     $this.on('keypress.autoNumeric', function (e) {
-                        holder = getHolder($this);
-                        var processed = holder.processed;
+                        var holder = getHolder($this),
+                            processed = holder.processed;
                         holder.init(e);
+                        holder.settings.oEvent = 'keypress';
                         if (holder.skipAllways(e)) {
                             return true;
                         }
@@ -998,8 +939,9 @@
                         holder.formatted = false;
                     });
                     $this.on('keyup.autoNumeric', function (e) {
-                        holder = getHolder($this);
+                        var holder = getHolder($this);
                         holder.init(e);
+                        holder.settings.oEvent = 'keyup';
                         var skip = holder.skipAllways(e);
                         holder.kdCode = 0;
                         delete holder.valuePartsBeforePaste;
@@ -1021,59 +963,62 @@
                         }
                     });
                     $this.on('focusin.autoNumeric', function () {
-                        holder = getHolder($this);
-                        var $settings = holder.settingsClone;
-                        $settings.hasFocus = true;
-                        if ($settings.nBracket !== null) {
+                        var holder = getHolder($this);
+                        holder.settingsClone.oEvent = 'focusin';
+                        if (holder.settingsClone.nBracket !== null) {
                             var checkVal = $this.val();
-                            $this.val(negativeBracket(checkVal, $settings));
+                            $this.val(negativeBracket(checkVal, holder.settingsClone.nBracket, holder.settingsClone.oEvent));
                         }
                         holder.inVal = $this.val();
-                        var onEmpty = checkEmpty(holder.inVal, $settings, true);
-                        if (onEmpty !== null && onEmpty !== '') {
-                            $this.val(onEmpty);
+                        var onempty = checkEmpty(holder.inVal, holder.settingsClone, true);
+                        if (onempty !== null) {
+                            $this.val(onempty);
+                            if (holder.settings.pSign === 's') {
+                                setElementSelection(this, 0, 0);
+                            } else {
+                                setElementSelection(this, holder.settings.aSign.length, holder.settings.aSign.length);
+                            }
                         }
                     });
                     $this.on('focusout.autoNumeric', function () {
-                        holder = getHolder($this);
-                        var $settings = holder.settingsClone,
+                        var holder = getHolder($this),
+                            settingsClone = holder.settingsClone,
                             value = $this.val(),
                             origValue = value;
-                        $settings.hasFocus = false;
+                        holder.settingsClone.oEvent = 'focusout';
                         var strip_zero = ''; /** added to control leading zero */
-                        if ($settings.lZero === 'allow') { /** added to control leading zero */
-                            $settings.allowLeading = false;
+                        if (settingsClone.lZero === 'allow') { /** added to control leading zero */
+                            settingsClone.allowLeading = false;
                             strip_zero = 'leading';
                         }
                         if (value !== '') {
-                            value = autoStrip(value, $settings, strip_zero);
-                            if (checkEmpty(value, $settings) === null && autoCheck(value, $settings, $this[0])) {
-                                value = fixNumber(value, $settings.aDec, $settings.aNeg);
-                                value = autoRound(value, $settings);
-                                value = presentNumber(value, $settings.aDec, $settings.aNeg);
+                            value = autoStrip(value, settingsClone, strip_zero);
+                            if (checkEmpty(value, settingsClone) === null && autoCheck($this, value, settingsClone, $this[0])) {
+                                value = fixNumber(value, settingsClone.aDec, settingsClone.aNeg);
+                                value = autoRound(value, settingsClone);
+                                value = presentNumber(value, settingsClone.aDec, settingsClone.aNeg);
                             } else {
                                 value = '';
                             }
                         }
-                        var groupedValue = checkEmpty(value, $settings, false);
+                        var groupedValue = checkEmpty(value, settingsClone, false);
                         if (groupedValue === null) {
-                            groupedValue = autoGroup(value, $settings);
+                            groupedValue = autoGroup(value, settingsClone);
                         }
                         if (groupedValue !== holder.inVal || groupedValue !== origValue) {
                             $this.change();
                             $this.val(groupedValue);
                             delete holder.inVal;
                         }
+                        if (settingsClone.nBracket !== null && $this.autoNumeric('get') < 0) {
+                            holder.settingsClone.oEvent = 'focusout';
+                            $this.val(negativeBracket($this.val(), settingsClone.nBracket, settingsClone.oEvent));
+                        }
                     });
                 }
             });
         },
-
-        /**
-         * method to remove settings and stop autoNumeric() - does not remove the formatting
-         * $(someSelector).autoNumeric('destroy'); // destroy autoNumeric
-         * no parameters accepted
-         */
+        /** method to remove settings and stop autoNumeric() */
         destroy: function () {
             return $(this).each(function () {
                 var $this = $(this);
@@ -1081,24 +1026,21 @@
                 $this.removeData('autoNumeric');
             });
         },
-
-        /**
-         * method to update settings - can be call as many times
-         * $(someSelector).autoNumeric('update', {options}); // updates the settings
-         * options passes as a parameter example '{aSep: '.', aDec: ',', aSign: '€ '}
-         */
+        /** method to update settings - can call as many times */
         update: function (options) {
             return $(this).each(function () {
                 var $this = autoGet($(this)),
                     settings = $this.data('autoNumeric');
                 if (typeof settings !== 'object') {
                     $.error("You must initialize autoNumeric('init', {options}) prior to calling the 'update' method");
+                    return this;
                 }
                 var strip = $this.autoNumeric('get');
                 settings = $.extend(settings, options);
                 getHolder($this, settings, true);
                 if (settings.aDec === settings.aSep) {
                     $.error("autoNumeric will not function properly when the decimal character aDec: '" + settings.aDec + "' and thousand separator aSep: '" + settings.aSep + "' are the same character");
+                    return this;
                 }
                 $this.data('autoNumeric', settings);
                 if ($this.val() !== '' || $this.text() !== '') {
@@ -1107,13 +1049,7 @@
                 return;
             });
         },
-
-        /**
-         * method to format value sent as a parameter ""
-         * $(someSelector).autoNumeric('set', 'value'}); // formats the value being passed
-         * value passed as a string - can be a integer '1234' or double '1234.56789'
-         * must contain only numbers and one decimal (period) character
-         */
+        /** returns a formatted strings for "input:text" fields Uses jQuery's .val() method*/
         set: function (valueIn) {
             if (valueIn === null) {
                 return;
@@ -1122,56 +1058,54 @@
                 var $this = autoGet($(this)),
                     settings = $this.data('autoNumeric'),
                     value = valueIn.toString(),
-                    testValue = valueIn.toString(),
-                    $input = $this.is('input[type=text], input[type=hidden], input[type=tel], input:not([type])');
+                    testValue = valueIn.toString();
                 if (typeof settings !== 'object') {
                     $.error("You must initialize autoNumeric('init', {options}) prior to calling the 'set' method");
+                    return this;
                 }
                 /** routine to handle page re-load from back button */
                 if (testValue !== $this.attr('value') && $this.prop('tagName').toLowerCase() === 'input' && settings.runOnce === false) {
-                    value = (settings.nBracket !== null) ? negativeBracket($this.val(), settings) : value;
+                    value = (settings.nBracket !== null) ? negativeBracket($this.val(), settings.nBracket, 'pageLoad') : value;
                     value = autoStrip(value, settings);
                 }
                 /** allows locale decimal separator to be a comma */
                 if ((testValue === $this.attr('value') || testValue === $this.text()) && settings.runOnce === false) {
                     value = value.replace(',', '.');
                 }
+                /** returns a empty string if the value being 'set' contains non-numeric characters and or more than decimal point (full stop) and will not be formatted */
                 if (!$.isNumeric(+value)) {
-                    $.error("The value (" + value + ") being 'set' is not numeric and has caused a error to be thrown");
+                    return '';
                 }
                 value = checkValue(value, settings);
-                settings.setEvent = true;
+                settings.oEvent = 'set';
                 value.toString();
                 if (value !== '') {
                     value = autoRound(value, settings);
                 }
                 value = presentNumber(value, settings.aDec, settings.aNeg);
-                if (!autoCheck(value, settings)) {
-                    value = autoRound('', settings);
+                if (!autoCheck($this, value, settings)) {
+                    value = ''; //autoRound('', settings);
                 }
                 value = autoGroup(value, settings);
-                if ($input) {
+                if ($this.is('input[type=text], input[type=hidden], input[type=tel], input:not([type])')) { /**added hidden type */
                     return $this.val(value);
                 }
                 if ($.inArray($this.prop('tagName').toLowerCase(), settings.tagList) !== -1) {
                     return $this.text(value);
                 }
+                $.error("The <" + $this.prop('tagName').toLowerCase() + "> is not supported by autoNumeric()");
                 return false;
             });
         },
-
-        /**
-         * method to get the unformatted that accepts up to one parameter
-         * $(someSelector).autoNumeric('get'); no parameters accepted
-         * values returned as ISO numeric string "1234.56" where the decimal character is a period
-         * only the first element in the selector is returned
-         */
+        /** method to get the unformatted value from a specific input field, returns a numeric value */
         get: function () {
             var $this = autoGet($(this)),
                 settings = $this.data('autoNumeric');
             if (typeof settings !== 'object') {
                 $.error("You must initialize autoNumeric('init', {options}) prior to calling the 'get' method");
+                return this;
             }
+            settings.oEvent = 'get';
             var getValue = '';
             /** determine the element type then use .eq(0) selector to grab the value of the first element in selector */
             if ($this.is('input[type=text], input[type=hidden], input[type=tel], input:not([type])')) { /**added hidden type */
@@ -1180,14 +1114,13 @@
                 getValue = $this.eq(0).text();
             } else {
                 $.error("The <" + $this.prop('tagName').toLowerCase() + "> is not supported by autoNumeric()");
+                return false;
             }
             if ((getValue === '' && settings.wEmpty === 'empty') || (getValue === settings.aSign && (settings.wEmpty === 'sign' || settings.wEmpty === 'empty'))) {
                 return '';
             }
-            if (getValue !== '' && settings.nBracket !== null) {
-                settings.removeBrackets = true;
-                getValue = negativeBracket(getValue, settings);
-                settings.removeBrackets = false;
+            if (settings.nBracket !== null && getValue !== '') {
+                getValue = negativeBracket(getValue, settings.nBracket, settings.oEvent);
             }
             if (settings.runOnce || settings.aForm === false) {
                 getValue = autoStrip(getValue, settings);
@@ -1202,146 +1135,60 @@
             getValue = checkValue(getValue, settings);
             return getValue; /** returned Numeric String */
         },
-
-        /**
-         * The 'getString' method used jQuerys .serialize() method that creates a text string in standard URL-encoded notation
-         * it then loops through the string and un-formats the inputs with autoNumeric
-         * $(someSelector).autoNumeric('getString'); no parameter accepted
-         * values returned as ISO numeric string "1234.56" where the decimal character is a period
-         */
+        /** method to get the unformatted value from multiple fields */
         getString: function () {
             var isAutoNumeric = false,
                 $this = autoGet($(this)),
-                formFields = $this.serialize(),
-                formParts = formFields.split('&'),
+                str = $this.serialize(),
+                parts = str.split('&'),
                 formIndex = $('form').index($this),
-                allFormElements = $('form:eq(' + formIndex + ')'),
-                aiIndex = [], /* all input index */
-                scIndex = [], /* successful control index */
-                rsubmitterTypes = /^(?:submit|button|image|reset|file)$/i, /* from jQuery serialize method */
-                rsubmittable = /^(?:input|select|textarea|keygen)/i, /* from jQuery serialize method */
-                rcheckableType = /^(?:checkbox|radio)$/i,
-                rnonAutoNumericTypes = /^(?:button|checkbox|color|date|datetime|datetime-local|email|file|image|month|number|password|radio|range|reset|search|submit|time|url|week)/i,
-                count = 0;
-            /*jslint unparam: true*/
-            /* index of successful elements */
-            $.each(allFormElements[0], function (i, field) {
-                if (field.name !== '' && rsubmittable.test(field.localName) && !rsubmitterTypes.test(field.type) && !field.disabled && (field.checked || !rcheckableType.test(field.type))) {
-                    scIndex.push(count);
-                    count = count + 1;
-                } else {
-                    scIndex.push(-1);
-                }
-            });
-            /* index of all inputs tags except checkbox */
-            count = 0;
-            $.each(allFormElements[0], function (i, field) {
-                if (field.localName === 'input' && (field.type === '' || field.type === 'text' || field.type === 'hidden' || field.type === 'tel')) {
-                    aiIndex.push(count);
-                    count = count + 1;
-                } else {
-                    aiIndex.push(-1);
-                    if (field.localName === 'input' && rnonAutoNumericTypes.test(field.type)) {
-                        count = count + 1;
+                i = 0;
+            for (i; i < parts.length; i += 1) {
+                var miniParts = parts[i].split('='),
+                    $field = $('form:eq(' + formIndex + ') input[name="' + decodeURIComponent(miniParts[0]) + '"]'),
+                    settings = $field.data('autoNumeric');
+                if (typeof settings === 'object') {
+                    if (miniParts[1] !== null) {
+                        miniParts[1] = $field.autoNumeric('get');
+                        parts[i] = miniParts.join('=');
+                        isAutoNumeric = true;
                     }
                 }
-            });
-            $.each(formParts, function (i, miniParts) {
-                miniParts = formParts[i].split('=');
-                var scElement = $.inArray(i, scIndex);
-                if (scElement > -1 && aiIndex[scElement] > -1) {
-                    var testInput = $('form:eq(' + formIndex + ') input:eq(' + aiIndex[scElement] + ')'),
-                        settings = testInput.data('autoNumeric');
-                    if (typeof settings === 'object') {
-                        if (miniParts[1] !== null) {
-                            miniParts[1] = $('form:eq(' + formIndex + ') input:eq(' + aiIndex[scElement] + ')').autoNumeric('get').toString();
-                            formParts[i] = miniParts.join('=');
-                            isAutoNumeric = true;
-                        }
-                    }
-                }
-            });
-            /*jslint unparam: false*/
-            if (!isAutoNumeric) {
-                $.error("You must initialize autoNumeric('init', {options}) prior to calling the 'getString' method");
             }
-            return formParts.join('&');
+            if (isAutoNumeric === true) {
+                return parts.join('&');
+            }
+            return str;
         },
-
-        /**
-         * The 'getString' method used jQuerys .serializeArray() method that creates array or objects that can be encoded as a JSON string
-         * it then loops through the string and un-formats the inputs with autoNumeric
-         * $(someSelector).autoNumeric('getArray'); no parameter accepted
-         * values returned as ISO numeric string "1234.56" where the decimal character is a period
-         */
+        /** method to get the unformatted value from multiple fields */
         getArray: function () {
             var isAutoNumeric = false,
                 $this = autoGet($(this)),
                 formFields = $this.serializeArray(),
-                formIndex = $('form').index($this),
-                allFormElements = $('form:eq(' + formIndex + ')'),
-                aiIndex = [], /* all input index */
-                scIndex = [], /* successful control index */
-                rsubmitterTypes = /^(?:submit|button|image|reset|file)$/i, /* from jQuery serialize method */
-                rsubmittable = /^(?:input|select|textarea|keygen)/i, /* from jQuery serialize method */
-                rcheckableType = /^(?:checkbox|radio)$/i,
-                rnonAutoNumericTypes = /^(?:button|checkbox|color|date|datetime|datetime-local|email|file|image|month|number|password|radio|range|reset|search|submit|time|url|week)/i,
-                count = 0;
+                formIndex = $('form').index($this);
             /*jslint unparam: true*/
-            /* index of successful elements */
-            $.each(allFormElements[0], function (i, field) {
-                if (field.name !== '' && rsubmittable.test(field.localName) && !rsubmitterTypes.test(field.type) && !field.disabled && (field.checked || !rcheckableType.test(field.type))) {
-                    scIndex.push(count);
-                    count = count + 1;
-                } else {
-                    scIndex.push(-1);
-                }
-            });
-            /* index of all inputs tags */
-            count = 0;
-            $.each(allFormElements[0], function (i, field) {
-                if (field.localName === 'input' && (field.type === '' || field.type === 'text' || field.type === 'hidden' || field.type === 'tel')) {
-                    aiIndex.push(count);
-                    count = count + 1;
-                } else {
-                    aiIndex.push(-1);
-                    if (field.localName === 'input' && rnonAutoNumericTypes.test(field.type)) {
-                        count = count + 1;
-                    }
-                }
-            });
             $.each(formFields, function (i, field) {
-                var scElement = $.inArray(i, scIndex);
-                if (scElement > -1 && aiIndex[scElement] > -1) {
-                    var testInput = $('form:eq(' + formIndex + ') input:eq(' + aiIndex[scElement] + ')'),
-                        settings = testInput.data('autoNumeric');
-                    if (typeof settings === 'object') {
-                        field.value = $('form:eq(' + formIndex + ') input:eq(' + aiIndex[scElement] + ')').autoNumeric('get').toString();
-                        isAutoNumeric = true;
+                var $field = $('form:eq(' + formIndex + ') input[name="' + decodeURIComponent(field.name) + '"]'),
+                    settings = $field.data('autoNumeric');
+                if (typeof settings === 'object') {
+                    if (field.value !== '') {
+                        field.value = $field.autoNumeric('get').toString();
                     }
+                    isAutoNumeric = true;
                 }
             });
             /*jslint unparam: false*/
-            if (!isAutoNumeric) {
-                $.error("None of the successful form inputs are initialized by autoNumeric.");
+            if (isAutoNumeric === true) {
+                return formFields;
             }
-            return formFields;
+            return this;
         },
-
-        /**
-        * The 'getSteetings returns the object with autoNumeric settings for those who need to look under the hood
-        * $(someSelector).autoNumeric('getSettings'); // no parameters accepted
-        * $(someSelector).autoNumeric('getSettings').aDec; // return the aDec setting as a string - ant valid setting can be used
-        */
+        /** returns the settings object for those who need to look under the hood */
         getSettings: function () {
             var $this = autoGet($(this));
             return $this.eq(0).data('autoNumeric');
         }
     };
-
-    /**
-    * autoNumeric function
-    */
     $.fn.autoNumeric = function (method) {
         if (methods[method]) {
             return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
@@ -1352,13 +1199,12 @@
         $.error('Method "' + method + '" is not supported by autoNumeric()');
     };
 
-    /**
-    * Defaults are public - these can be overridden by the following:
-    * HTML5 data attributes
-    * Options passed by the 'init' or 'update' methods
-    * Use jQuery's $.extend method - great way to pass ASP.NET current culture settings
-    */
+    /* Make defaults public */
     $.fn.autoNumeric.defaults = {
+        /** allowed numeric values
+         * please do not modify
+         */
+        aNum: '0123456789',
         /** allowed thousand separator characters
          * comma = ','
          * period "full stop" = '.'
@@ -1402,7 +1248,7 @@
          * value must be enclosed in quotes and use the period for the decimal point
          * value must be smaller than vMax
          */
-        vMin: '-9999999999999.99',
+        vMin: '0.00',
         /** max number of decimal places = used to override decimal places set by the vMin & vMax values
          * value must be enclosed in quotes example mDec: '3',
          * This can also set the value via a call back function mDec: 'css:#
@@ -1448,6 +1294,9 @@
          * true = automatically formats the default value on page ready
          * false = will not format the default value
          */
-        aForm: true
+        aForm: true,
+        /** future use */
+        onSomeEvent: function () { }
     };
+
 }(jQuery));
